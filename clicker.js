@@ -8,14 +8,34 @@ const click_sound = document.getElementById('crunch');
 
 // init vars
 let bg_color = 0;
-let last_cookies = 0;
-let cookies = 0;
+
+let cookies;
+if (localStorage.getItem('636f6f6b696573') != null) {
+    cookies = parseInt(localStorage.getItem('636f6f6b696573'));
+} else {
+    cookies = 0;
+}
+let last_cookies = cookies;
 let cookies_per_second = 0.0;
 let hundredths_of_a_cookie = 0;
-let equipment_lvl = 1;
-let equipment_price = 100;
+
+let equipment_lvl;
+if (localStorage.getItem('65717569706d656e74') != null) {
+    equipment_lvl = parseInt(localStorage.getItem('65717569706d656e74'));
+} else {
+    equipment_lvl = 1;
+}
+
+let equipment_price = (equipment_lvl-1)**2 + 100*(equipment_lvl-1) + 100;
+
 let employees = 0;
-let employee_bonus = 250;
+if (localStorage.getItem('656d706c6f79656573') != null) {
+    employees = parseInt(localStorage.getItem('656d706c6f79656573'));
+} else {
+    employees = 0;
+}
+
+let employee_bonus = employees**2 + 200*employees + 250;
 
 const RES_X = 600;
 const RES_Y = 480;
@@ -70,6 +90,19 @@ let fps = 0;
 
 let ms_per_employee = Infinity;
 let last_ms_for_employee = 0;
+
+// save progress on exit
+function save() {
+    localStorage.setItem('636f6f6b696573', cookies);
+    localStorage.setItem('65717569706d656e74', equipment_lvl);
+    localStorage.setItem('656d706c6f79656573', employees);
+    
+    localStorage.setItem('cookie_count', cookies);
+    localStorage.setItem('equipment', equipment_lvl);
+    localStorage.setItem('workers', employees)
+}
+
+window.addEventListener('beforeunload', save);
 
 function play_sound(audio, vol) {
     audio.currentTime = 0;
@@ -191,12 +224,13 @@ function calc_click_gap() {
 
     let ultimate_range = largest_range_of_ranges - smallest_range_of_ranges;
 
-    if (ultimate_range < 4 && clicks.length > 5) {
+    if (ultimate_range < 3 && clicks.length > 5) {
         suspicion++;
 
         if (suspicion > 30) { // if we are sure enough the player is autoclicking
             // punish the cheater
             cookies -= (abs(ceil(cookies/2)) + clicks.length*equipment_lvl**3);
+            save();
             // require further cheating to continue
             suspicion -= 2;
         }
@@ -208,17 +242,17 @@ function calc_click_gap() {
         }
     }
 
-    console.log(
-        "================",
-        "\ngaps: " + click_gaps,
-        "\nranges: " + ranges,
-        "\nrors: " + ranges_of_ranges,
-        "\nrange: " + range,
-        "\nr of rs: " + range_of_ranges,
-        "\nfinal: " + ultimate_range,
-        "\nsus: " + suspicion,
-        "\n================"
-    );
+    // console.log(
+    //     "================",
+    //     "\ngaps: " + click_gaps,
+    //     "\nranges: " + ranges,
+    //     "\nrors: " + ranges_of_ranges,
+    //     "\nrange: " + range,
+    //     "\nr of rs: " + range_of_ranges,
+    //     "\nfinal: " + ultimate_range,
+    //     "\nsus: " + suspicion,
+    //     "\n================"
+    // );
 }
 
 function setup() {
@@ -417,11 +451,6 @@ function draw() {
             shop_button.ry += 10;
         }
     }
-    
-    fill(255,0,0)
-    rect(10, RES_Y - 100, 20, -(250*(suspicion/30)))
-    strokeWeight(1)
-    line(10, RES_Y - 350, 30, RES_Y - 350)
 
     frameRate(60);
 }
@@ -455,6 +484,7 @@ function mousePressed() {
             if (clicks.length > 18) {
                 // punish the cheater
                 cookies -= (abs(ceil(cookies/2)) + clicks.length*equipment_lvl**3)
+                save();
             }
         }
 
@@ -484,7 +514,7 @@ function mousePressed() {
             ) {
                 equipment_lvl++;
                 cookies -= equipment_price;
-                equipment_price += 100 + equipment_lvl**2;
+                equipment_price = (equipment_lvl-1)**2 + 100*(equipment_lvl-1) + 100;
             }
             
             // hire employee button
@@ -497,7 +527,7 @@ function mousePressed() {
             ) {
                 employees++;
                 cookies -= employee_bonus;
-                employee_bonus += 200 + employees**2;
+                employee_bonus = employees**2 + 200*employees + 250;
             }
         }
     }
